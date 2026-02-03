@@ -1,13 +1,9 @@
 from flask import Flask, render_template_string, request, jsonify, redirect, url_for, send_file, session
 import json
-import os
 from datetime import datetime
 import csv
 import io
-import random
-from typing import Dict, List
 import hashlib
-import uuid
 import os
 
 
@@ -1486,7 +1482,7 @@ def index():
     if not investments_html:
         investments_html = '<p style="text-align: center; color: #666; padding: 20px;">Нет инвестиций</p>'
     content = f'''
-    <h1 <h1 style="color: #333; margin-bottom: 30px;">
+    <h1 style="color: #333; margin-bottom: 30px;">
         Добро пожаловать, {current_user['username']}!</h1>
 
     <!-- Карточки статистики -->
