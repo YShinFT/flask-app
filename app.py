@@ -130,7 +130,7 @@ def get_base_html(title, content):
         'Цели': '/goals',
         'Отчеты': '/reports',
         'Экспорт': '/export',
-        'Сброс': '/reset-data'  # Добавили
+        'Сброс': '/reset-data'
     }
 
     # Иконки для меню
@@ -141,7 +141,7 @@ def get_base_html(title, content):
         'Цели': 'bullseye',
         'Отчеты': 'chart-pie',
         'Экспорт': 'download',
-        'Сброс': 'trash-alt'  # Добавили
+        'Сброс': 'trash-alt'
     }
 
     # Генерируем ссылки меню
@@ -150,12 +150,14 @@ def get_base_html(title, content):
     if not current_user:
         # Если пользователь не авторизован - показываем только вход/регистрацию
         menu_links = '''
-        <a href="/login" class="nav-link">
-            <i class="fas fa-sign-in-alt"></i> Войти
-        </a>
-        <a href="/register" class="nav-link">
-            <i class="fas fa-user-plus"></i> Регистрация
-        </a>
+        <div class="nav-links-mobile">
+            <a href="/login" class="nav-link">
+                <i class="fas fa-sign-in-alt"></i> Войти
+            </a>
+            <a href="/register" class="nav-link">
+                <i class="fas fa-user-plus"></i> Регистрация
+            </a>
+        </div>
         '''
         user_info = ''
     else:
@@ -165,34 +167,41 @@ def get_base_html(title, content):
             icon = icons.get(route_name, 'circle')
             menu_links += f'''
             <a href="{route_url}" class="nav-link {is_active}">
-                <i class="fas fa-{icon}"></i> {route_name}
+                <i class="fas fa-{icon}"></i> <span class="nav-text">{route_name}</span>
             </a>
             '''
 
         # Добавляем кнопку выхода
         menu_links += f'''
-        <a href="/logout" class="nav-link" style="color: #f44336;">
-            <i class="fas fa-sign-out-alt"></i> Выйти
+        <a href="/logout" class="nav-link logout-link">
+            <i class="fas fa-sign-out-alt"></i> <span class="nav-text">Выйти</span>
         </a>
         '''
 
         # Информация о пользователе
         user_info = f'''
-        <div style="display: flex; align-items: center; gap: 10px; color: #666; margin-right: 20px;">
-            <i class="fas fa-user-circle" style="font-size: 20px;"></i>
-            <div>
-                <div style="font-weight: 500; font-size: 14px;">{current_user['username']}</div>
-                <div style="font-size: 11px; color: #999;">Пользователь</div>
+        <div class="user-info">
+            <i class="fas fa-user-circle"></i>
+            <div class="user-details">
+                <div class="username">{current_user['username']}</div>
+                <div class="user-role">Пользователь</div>
             </div>
         </div>
         '''
+
+    # Мобильное меню
+    mobile_menu = '''
+    <div class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars"></i>
+    </div>
+    '''
 
     return f'''
     <!DOCTYPE html>
     <html lang="ru">
     <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
         <title>{title} - Финансовый менеджер</title>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
         <style>
@@ -203,133 +212,217 @@ def get_base_html(title, content):
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }}
 
+            :root {{
+                --primary-color: #4CAF50;
+                --secondary-color: #2196F3;
+                --danger-color: #f44336;
+                --warning-color: #FF9800;
+                --text-color: #333;
+                --text-light: #666;
+                --text-lighter: #999;
+                --bg-color: #f8f9fa;
+                --card-bg: #ffffff;
+                --border-color: #e0e0e0;
+            }}
+
             body {{
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 min-height: 100vh;
-                padding: 20px;
+                padding: 10px;
+                overflow-x: hidden;
             }}
 
             .container {{
                 max-width: 1200px;
                 margin: 0 auto;
+                width: 100%;
             }}
 
             /* Навигационное меню */
             .navbar {{
                 background: white;
                 border-radius: 15px;
-                padding: 15px 30px;
-                margin-bottom: 30px;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                padding: 15px 20px;
+                margin-bottom: 20px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.1);
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                flex-wrap: wrap; 
-                gap: 15px;
+                flex-wrap: wrap;
+                position: relative;
             }}
 
             .logo {{
                 display: flex;
                 align-items: center;
                 gap: 10px;
-                font-size: 24px;
+                font-size: 20px;
                 font-weight: bold;
-                color: #333;
+                color: var(--text-color);
                 text-decoration: none;
+                z-index: 2;
             }}
 
             .logo-icon {{
-                font-size: 32px;
+                font-size: 28px;
+            }}
+
+            .mobile-menu-toggle {{
+                display: none;
+                font-size: 24px;
+                color: var(--text-color);
+                cursor: pointer;
+                padding: 10px;
+                z-index: 2;
             }}
 
             .nav-links {{
                 display: flex;
-                gap: 10px;
+                gap: 5px;
                 flex-wrap: wrap;
                 justify-content: flex-end;
                 flex-grow: 1;
+                transition: all 0.3s ease;
             }}
 
             .nav-link {{
                 text-decoration: none;
-                color: #666;
-                padding: 8px 16px;
+                color: var(--text-light);
+                padding: 8px 12px;
                 border-radius: 20px;
                 transition: all 0.3s ease;
                 font-weight: 500;
                 font-size: 14px;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                white-space: nowrap;
             }}
 
             .nav-link:hover {{
-                background: #f0f0f0;
-                color: #333;
+                background: var(--bg-color);
+                color: var(--text-color);
             }}
 
             .nav-link.active {{
-                background: #4CAF50;
+                background: var(--primary-color);
                 color: white;
+            }}
+
+            .logout-link {{
+                color: var(--danger-color) !important;
+            }}
+
+            .nav-text {{
+                display: inline;
+            }}
+
+            /* Информация о пользователе */
+            .user-info {{
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                color: var(--text-light);
+                margin-right: 15px;
+                min-width: fit-content;
+            }}
+
+            .user-info i {{
+                font-size: 24px;
+            }}
+
+            .user-details {{
+                display: flex;
+                flex-direction: column;
+            }}
+
+            .username {{
+                font-weight: 500;
+                font-size: 14px;
+            }}
+
+            .user-role {{
+                font-size: 11px;
+                color: var(--text-lighter);
             }}
 
             /* Основной контент */
             .content {{
-                background: white;
+                background: var(--card-bg);
                 border-radius: 15px;
-                padding: 30px;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                padding: 20px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.1);
                 min-height: 500px;
+                width: 100%;
+                overflow-x: hidden;
             }}
 
             /* Карточки */
             .card {{
-                background: #f8f9fa;
+                background: var(--bg-color);
                 border-radius: 10px;
-                padding: 25px;
-                margin: 20px 0;
-                border-left: 5px solid #4CAF50;
+                padding: 20px;
+                margin: 15px 0;
+                border-left: 5px solid var(--primary-color);
+                width: 100%;
+                overflow-x: auto;
             }}
 
             .card-header {{
                 display: flex;
-                justify-content: space-between;
-                align-items: center;
+                flex-direction: column;
+                gap: 15px;
                 margin-bottom: 20px;
+            }}
+
+            @media (min-width: 768px) {{
+                .card-header {{
+                    flex-direction: row;
+                    justify-content: space-between;
+                    align-items: center;
+                }}
             }}
 
             .card-title {{
                 font-size: 20px;
-                color: #333;
+                color: var(--text-color);
                 font-weight: 600;
+                margin: 0;
             }}
 
             /* Формы */
             .form-group {{
-                margin-bottom: 20px;
+                margin-bottom: 15px;
+                width: 100%;
             }}
 
             label {{
                 display: block;
                 margin-bottom: 8px;
-                color: #555;
+                color: var(--text-light);
                 font-weight: 500;
+                font-size: 14px;
             }}
 
             input, select, textarea {{
                 width: 100%;
                 padding: 12px;
-                border: 2px solid #e0e0e0;
+                border: 2px solid var(--border-color);
                 border-radius: 8px;
                 font-size: 16px;
                 transition: border 0.3s ease;
+                -webkit-appearance: none;
+                appearance: none;
             }}
 
             input:focus, select:focus, textarea:focus {{
                 outline: none;
-                border-color: #4CAF50;
+                border-color: var(--primary-color);
             }}
 
             /* Кнопки */
             .btn {{
-                padding: 12px 24px;
+                padding: 12px 20px;
                 border: none;
                 border-radius: 8px;
                 font-size: 16px;
@@ -337,13 +430,26 @@ def get_base_html(title, content):
                 cursor: pointer;
                 transition: all 0.3s ease;
                 text-decoration: none;
-                display: inline-block;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                text-align: center;
+                white-space: nowrap;
+                width: 100%;
+                margin: 5px 0;
+            }}
+
+            @media (min-width: 480px) {{
+                .btn {{
+                    width: auto;
+                    margin: 0;
+                }}
             }}
 
             .btn-primary {{
-                background: #4CAF50;
+                background: var(--primary-color);
                 color: white;
-                border: none;
             }}
 
             .btn-primary:hover {{
@@ -353,75 +459,288 @@ def get_base_html(title, content):
             }}
 
             .btn-secondary {{
-                background: #2196F3;
+                background: var(--secondary-color);
                 color: white;
             }}
 
             .btn-danger {{
-                background: #f44336;
+                background: var(--danger-color);
                 color: white;
             }}
 
             .btn-success {{
-                background: #4CAF50;
+                background: var(--primary-color);
                 color: white;
             }}
 
             /* Таблицы */
+            .table-container {{
+                width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }}
+
             .table {{
                 width: 100%;
                 border-collapse: collapse;
-                margin: 20px 0;
+                margin: 15px 0;
+                min-width: 600px;
             }}
 
             .table th {{
-                background: #f5f5f5;
-                padding: 15px;
+                background: var(--bg-color);
+                padding: 12px;
                 text-align: left;
-                color: #333;
+                color: var(--text-color);
                 font-weight: 600;
-                border-bottom: 2px solid #e0e0e0;
+                border-bottom: 2px solid var(--border-color);
+                font-size: 14px;
             }}
 
             .table td {{
-                padding: 15px;
-                border-bottom: 1px solid #e0e0e0;
+                padding: 12px;
+                border-bottom: 1px solid var(--border-color);
+                font-size: 14px;
             }}
 
             .table tr:hover {{
-                background: #f9f9f9;
+                background: var(--bg-color);
             }}
 
             .income {{
-                color: #4CAF50;
+                color: var(--primary-color);
                 font-weight: bold;
             }}
 
             .expense {{
-                color: #f44336;
+                color: var(--danger-color);
                 font-weight: bold;
             }}
 
             /* Футер */
             .footer {{
                 text-align: center;
-                margin-top: 40px;
-                padding: 20px;
+                margin-top: 30px;
+                padding: 15px;
                 color: white;
                 font-size: 14px;
             }}
 
+            /* Сетка */
+            .grid {{
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 15px;
+                margin: 20px 0;
+            }}
+
+            @media (min-width: 600px) {{
+                .grid-2 {{
+                    grid-template-columns: repeat(2, 1fr);
+                }}
+                .grid-3 {{
+                    grid-template-columns: repeat(3, 1fr);
+                }}
+                .grid-4 {{
+                    grid-template-columns: repeat(2, 1fr);
+                }}
+            }}
+
+            @media (min-width: 900px) {{
+                .grid-4 {{
+                    grid-template-columns: repeat(4, 1fr);
+                }}
+            }}
+
+            /* Статистические карточки */
+            .stat-card {{
+                background: var(--card-bg);
+                border-radius: 10px;
+                padding: 20px;
+                text-align: center;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+                border-top: 5px solid var(--secondary-color);
+                height: 100%;
+            }}
+
+            .stat-card h3 {{
+                color: var(--text-light);
+                font-size: 14px;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                margin-bottom: 10px;
+            }}
+
+            .stat-card .value {{
+                font-size: 28px;
+                font-weight: bold;
+                margin: 10px 0;
+                color: var(--secondary-color);
+            }}
+
+            @media (min-width: 480px) {{
+                .stat-card .value {{
+                    font-size: 32px;
+                }}
+            }}
+
+            @media (min-width: 768px) {{
+                .stat-card .value {{
+                    font-size: 36px;
+                }}
+            }}
+
             /* Адаптивность */
-            @media (max-width: 768px) {{
+            @media (max-width: 767px) {{
+                body {{
+                    padding: 5px;
+                }}
+
                 .navbar {{
-                    flex-direction: column;
-                    gap: 15px;
+                    padding: 10px 15px;
+                    flex-wrap: nowrap;
+                }}
+
+                .mobile-menu-toggle {{
+                    display: block;
                 }}
 
                 .nav-links {{
-                    flex-wrap: wrap;
-                    justify-content: center;
+                    position: fixed;
+                    top: 0;
+                    left: -100%;
+                    width: 80%;
+                    max-width: 300px;
+                    height: 100vh;
+                    background: white;
+                    flex-direction: column;
+                    padding: 80px 20px 20px;
+                    box-shadow: 2px 0 20px rgba(0,0,0,0.1);
+                    z-index: 1000;
+                    transition: left 0.3s ease;
+                    overflow-y: auto;
                 }}
+
+                .nav-links.active {{
+                    left: 0;
+                }}
+
+                .nav-link {{
+                    padding: 15px;
+                    border-radius: 10px;
+                    margin-bottom: 5px;
+                    width: 100%;
+                    justify-content: flex-start;
+                }}
+
+                .nav-text {{
+                    display: inline;
+                }}
+
+                .user-info {{
+                    display: none;
+                }}
+
+                .content {{
+                    padding: 15px;
+                    margin-bottom: 15px;
+                }}
+
+                .card {{
+                    padding: 15px;
+                }}
+
+                .btn {{
+                    padding: 10px 15px;
+                    font-size: 14px;
+                }}
+
+                .table {{
+                    min-width: 500px;
+                }}
+
+                .card-title {{
+                    font-size: 18px;
+                }}
+            }}
+
+            @media (max-width: 480px) {{
+                .logo {{
+                    font-size: 18px;
+                }}
+
+                .logo-icon {{
+                    font-size: 24px;
+                }}
+
+                .content {{
+                    padding: 12px;
+                }}
+
+                .stat-card .value {{
+                    font-size: 24px;
+                }}
+            }}
+
+            /* Оверлей для мобильного меню */
+            .menu-overlay {{
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                z-index: 999;
+            }}
+
+            .menu-overlay.active {{
+                display: block;
+            }}
+
+            /* Утилиты */
+            .text-center {{
+                text-align: center;
+            }}
+
+            .mb-10 {{
+                margin-bottom: 10px;
+            }}
+
+            .mb-20 {{
+                margin-bottom: 20px;
+            }}
+
+            .mt-10 {{
+                margin-top: 10px;
+            }}
+
+            .mt-20 {{
+                margin-top: 20px;
+            }}
+
+            .d-flex {{
+                display: flex;
+            }}
+
+            .flex-wrap {{
+                flex-wrap: wrap;
+            }}
+
+            .gap-10 {{
+                gap: 10px;
+            }}
+
+            .gap-15 {{
+                gap: 15px;
+            }}
+
+            .w-100 {{
+                width: 100%;
+            }}
+
+            .h-100 {{
+                height: 100%;
             }}
         </style>
     </head>
@@ -431,16 +750,20 @@ def get_base_html(title, content):
             <nav class="navbar">
                 <a href="/" class="logo">
                     <span class="logo-icon">💰</span>
-                    ФинансМенеджер
+                    <span class="logo-text">ФинансМенеджер</span>
                 </a>
 
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    {user_info}
-                    <div class="nav-links">
+                {mobile_menu if current_user else ''}
+
+                <div class="nav-header">
+                    {user_info if current_user else ''}
+                    <div class="nav-links" id="navLinks">
                         {menu_links}
                     </div>
                 </div>
             </nav>
+
+            <div class="menu-overlay" id="menuOverlay" onclick="toggleMobileMenu()"></div>
 
             <!-- Основной контент -->
             <div class="content">
@@ -452,6 +775,43 @@ def get_base_html(title, content):
                 <p>Финансовый менеджер | Яшин Владислав | {datetime.now().strftime('%Y')}</p>
             </div>
         </div>
+
+        <script>
+            function toggleMobileMenu() {{
+                const navLinks = document.getElementById('navLinks');
+                const overlay = document.getElementById('menuOverlay');
+                navLinks.classList.toggle('active');
+                overlay.classList.toggle('active');
+                document.body.style.overflow = navLinks.classList.contains('active') ? 'hidden' : '';
+            }}
+
+            // Закрытие меню при клике на ссылку
+            document.addEventListener('DOMContentLoaded', function() {{
+                const navLinks = document.querySelectorAll('.nav-link');
+                navLinks.forEach(link => {{
+                    link.addEventListener('click', function() {{
+                        toggleMobileMenu();
+                    }});
+                }});
+
+                // Адаптивные изображения
+                const images = document.querySelectorAll('img');
+                images.forEach(img => {{
+                    img.style.maxWidth = '100%';
+                    img.style.height = 'auto';
+                }});
+            }});
+
+            // Предотвращение масштабирования на мобильных устройствах при двойном тапе
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function(event) {{
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300) {{
+                    event.preventDefault();
+                }}
+                lastTouchEnd = now;
+            }}, false);
+        </script>
     </body>
     </html>
     '''
@@ -1130,25 +1490,25 @@ def index():
         Добро пожаловать, {current_user['username']}!</h1>
 
     <!-- Карточки статистики -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 30px 0;">
-        <div style="background: white; border-radius: 10px; padding: 25px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-top: 5px solid #2196F3;">
-            <div style="color: #666; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Текущий баланс</div>
-            <div style="font-size: 36px; font-weight: bold; margin: 10px 0; color: #2196F3;">{balance:,.2f} ₽</div>
-            <p>Общая сумма средств</p>
-        </div>
-
-        <div style="background: white; border-radius: 10px; padding: 25px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-top: 5px solid #4CAF50;">
-            <div style="color: #666; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Всего доходов</div>
-            <div style="font-size: 36px; font-weight: bold; margin: 10px 0; color: #4CAF50;">+{total_income:,.2f} ₽</div>
-            <p>Сумма всех поступлений</p>
-        </div>
-
-        <div style="background: white; border-radius: 10px; padding: 25px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-top: 5px solid #f44336;">
-            <div style="color: #666; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Всего расходов</div>
-            <div style="font-size: 36px; font-weight: bold; margin: 10px 0; color: #f44336;">-{total_expense:,.2f} ₽</div>
-            <p>Сумма всех трат</p>
-        </div>
+    <div class="grid grid-3">
+    <div class="stat-card" style="border-top-color: #2196F3;">
+        <h3>Текущий баланс</h3>
+        <div class="value">{balance:,.2f} ₽</div>
+        <p>Общая сумма средств</p>
     </div>
+
+    <div class="stat-card" style="border-top-color: #4CAF50;">
+        <h3>Всего доходов</h3>
+        <div class="value">+{total_income:,.2f} ₽</div>
+        <p>Сумма всех поступлений</p>
+    </div>
+
+    <div class="stat-card" style="border-top-color: #f44336;">
+        <h3>Всего расходов</h3>
+        <div class="value">-{total_expense:,.2f} ₽</div>
+        <p>Сумма всех трат</p>
+    </div>
+</div>
 
     <!-- Быстрые действия -->
     <div style="background: #f8f9fa; border-radius: 10px; padding: 25px; margin: 20px 0; border-left: 5px solid #4CAF50;">
@@ -1185,7 +1545,12 @@ def index():
 
 def get_recent_transactions_table(transactions):
     if not transactions:
-        return '<p style="text-align: center; color: #666; padding: 20px;">Нет операций</p>'
+        return '''
+        <div style="text-align: center; padding: 30px; color: #666;">
+            <i class="fas fa-exchange-alt" style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;"></i>
+            <p style="font-size: 16px;">Нет операций</p>
+        </div>
+        '''
 
     rows = ''
     for t in transactions:
@@ -1195,20 +1560,29 @@ def get_recent_transactions_table(transactions):
         amount = t.get("amount", 0)
         sign = "+" if amount > 0 else ""
 
+        # Обрезаем длинное описание на мобильных
+        description = t.get('description', 'Без описания')
+        if len(description) > 50:
+            description = description[:47] + "..."
+
         rows += f'''
-        <div style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #e0e0e0;">
-            <div>
-                <div style="font-weight: 500;">{t.get('description', 'Без описания')}</div>
-                <div style="font-size: 12px; color: #666;">{t.get('date', 'Нет даты')} • {t.get('category', 'Другое')}</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #e0e0e0;">
+            <div style="flex: 1; min-width: 0;">
+                <div style="font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{description}</div>
+                <div style="font-size: 12px; color: #666; margin-top: 4px;">
+                    <span style="margin-right: 10px;">{t.get('date', 'Нет даты')}</span>
+                    <span>•</span>
+                    <span style="margin-left: 10px;">{t.get('category', 'Другое')}</span>
+                </div>
             </div>
-            <div style="font-weight: bold; color: {'#4CAF50' if amount > 0 else '#f44336'}">
+            <div style="font-weight: bold; color: {'#4CAF50' if amount > 0 else '#f44336'}; font-size: 16px; white-space: nowrap; margin-left: 10px;">
                 {sign}{abs(amount):,.2f} ₽
             </div>
         </div>
         '''
 
     return f'''
-    <div>
+    <div style="max-width: 100%; overflow: hidden;">
         {rows}
     </div>
     '''
