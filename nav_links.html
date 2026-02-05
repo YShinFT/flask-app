@@ -1,0 +1,28 @@
+<!-- templates/partials/nav_links.html -->
+<a href="/" class="nav-link {% if current_title == 'Главная' %}active{% endif %}">
+    <i class="fas fa-home"></i> <span class="nav-text">Главная</span>
+</a>
+
+<a href="/transactions" class="nav-link {% if current_title == 'Транзакции' %}active{% endif %}">
+    <i class="fas fa-exchange-alt"></i> <span class="nav-text">Транзакции</span>
+</a>
+
+<a href="/investments" class="nav-link {% if current_title == 'Инвестиции' %}active{% endif %}">
+    <i class="fas fa-chart-line"></i> <span class="nav-text">Инвестиции</span>
+</a>
+
+<a href="/goals" class="nav-link {% if current_title == 'Цели' %}active{% endif %}">
+    <i class="fas fa-bullseye"></i> <span class="nav-text">Цели</span>
+</a>
+
+<a href="/reports" class="nav-link {% if current_title == 'Отчеты' %}active{% endif %}">
+    <i class="fas fa-chart-pie"></i> <span class="nav-text">Отчеты</span>
+</a>
+
+<a href="/export" class="nav-link {% if current_title == 'Экспорт' %}active{% endif %}">
+    <i class="fas fa-download"></i> <span class="nav-text">Экспорт</span>
+</a>
+
+<a href="/reset-data" class="nav-link {% if current_title == 'Сброс' %}active{% endif %}">
+    <i class="fas fa-trash-alt"></i> <span class="nav-text">Сброс</span>
+</a>

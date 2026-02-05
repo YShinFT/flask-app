@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Редактировать цель - Финансовый менеджер{% endblock %}
+
+{% block content %}
+<h1 style="color: #333; margin-bottom: 20px;">Редактировать цель</h1>
+
+<div class="card">
+    <form action="/api/edit-goal" method="POST">
+        <input type="hidden" name="id" value="{{ goal.get('id', 0) }}">
+
+        <div class="form-group">
+            <label for="name">Название цели</label>
+            <input type="text" id="name" name="name" required
+                   value="{{ goal.get('name', '') }}"
+                   style="width: 100%; padding: 12px;">
+        </div>
+
+        <div class="form-group">
+            <label for="description">Описание цели</label>
+            <textarea id="description" name="description" rows="2"
+                      style="width: 100%; padding: 12px; resize: vertical;">{{ goal.get('description', '') }}</textarea>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="form-group">
+                <label for="target">Целевая сумма (₽)</label>
+                <input type="number" id="target" name="target" step="0.01" min="1" required
+                       value="{{ goal.get('target', 0) }}"
+                       style="width: 100%; padding: 12px;">
+            </div>
+
+            <div class="form-group">
+                <label for="saved">Уже накоплено (₽)</label>
+                <input type="number" id="saved" name="saved" step="0.01" min="0"
+                       value="{{ goal.get('saved', 0) }}"
+                       style="width: 100%; padding: 12px;">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="deadline">Дата достижения цели</label>
+            <input type="date" id="deadline" name="deadline"
+                   value="{{ goal.get('deadline', '') }}"
+                   required style="width: 100%; padding: 12px;">
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 30px;">
+            <button type="submit" class="btn btn-primary" style="padding: 12px 24px;">
+                <i class="fas fa-save"></i> Сохранить изменения
+            </button>
+            <a href="/goals" class="btn" style="background: #f0f0f0; padding: 12px 24px;">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Инвестиции - Финансовый менеджер{% endblock %}
+
+{% block content %}
+<div class="card-header">
+    <h1 class="card-title" style="font-size: 28px;">Инвестиционный портфель</h1>
+    <div>
+        <a href="/add-investment" class="btn btn-primary" style="padding: 10px 20px;">
+            <i class="fas fa-plus"></i> Добавить актив
+        </a>
+        <a href="/investment-reports" class="btn btn-secondary" style="padding: 10px 20px; margin-left: 10px;">
+            <i class="fas fa-chart-pie"></i> Аналитика
+        </a>
+    </div>
+</div>
+
+<!-- Общая статистика -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 30px 0;">
+    <div style="background: white; border-radius: 10px; padding: 25px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-top: 5px solid #2196F3;">
+        <div style="color: #666; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Общая стоимость</div>
+        <div style="font-size: 36px; font-weight: bold; margin: 10px 0; color: #2196F3;">
+            {{ format_currency(total_value) }}
+        </div>
+        <p>Стоимость портфеля</p>
+    </div>
+
+    <div style="background: white; border-radius: 10px; padding: 25px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-top: 5px solid #4CAF50;">
+        <div style="color: #666; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Активов в портфеле</div>
+        <div style="font-size: 36px; font-weight: bold; margin: 10px 0; color: #4CAF50;">
+            {{ investments|length }}
+        </div>
+        <p>Количество активов</p>
+    </div>
+
+    <div style="background: white; border-radius: 10px; padding: 25px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-top: 5px solid #FF9800;">
+        <div style="color: #666; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Типов активов</div>
+        <div style="font-size: 36px; font-weight: bold; margin: 10px 0; color: #FF9800;">
+            {{ allocation|length }}
+        </div>
+        <p>Диверсификация</p>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin: 30px 0;">
+    <!-- Левая колонка: Распределение активов -->
+    <div class="card">
+        <h3 style="margin-bottom: 20px; color: #333;">
+            <i class="fas fa-chart-pie"></i> Распределение активов
+        </h3>
+
+        {% if allocation %}
+            {% for inv_type, stats in allocation.items() %}
+                {% set percentage = stats.percentage %}
+                {% set color = "#4CAF50" if percentage > 20 else "#2196F3" if percentage > 10 else "#FF9800" %}
+
+                <div style="margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span>{{ inv_type }}</span>
+                        <span><strong>{{ "%.1f"|format(percentage) }}%</strong> ({{ format_currency(stats.value) }})</span>
+                    </div>
+                    <div style="height: 10px; background: #f0f0f0; border-radius: 5px; overflow: hidden;">
+                        <div style="width: {{ percentage }}%; height: 100%; background: {{ color }}; border-radius: 5px;"></div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p style="text-align: center; color: #666;">Нет активов в портфеле</p>
+        {% endif %}
+    </div>
+
+    <!-- Правая колонка: Рекомендации -->
+    <div class="card">
+        <h3 style="margin-bottom: 20px; color: #333;">
+            <i class="fas fa-lightbulb"></i> Рекомендации
+        </h3>
+
+        {% if recommendations %}
+            {% for rec in recommendations %}
+                {% set icon = "💡" if rec.type == "advice" else "⚠️" if rec.type == "warning" else "ℹ️" %}
+                {% set color = "#4CAF50" if rec.priority == "low" else "#FF9800" if rec.priority == "medium" else "#f44336" %}
+
+                <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid {{ color }};">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <span style="font-size: 20px;">{{ icon }}</span>
+                        <strong>{{ rec.title }}</strong>
+                    </div>
+                    <p style="margin: 0; color: #555;">{{ rec.message }}</p>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p style="text-align: center; color: #666;">Нет рекомендаций. Портфель сбалансирован!</p>
+        {% endif %}
+
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
+            <h4 style="color: #666; margin-bottom: 10px;">Советы по диверсификации:</h4>
+            <ul style="padding-left: 20px; color: #555;">
+                <li style="margin-bottom: 8px;">Распределяйте средства между разными типами активов</li>
+                <li style="margin-bottom: 8px;">Регулярно пересматривайте портфель (ребалансировка)</li>
+                <li style="margin-bottom: 8px;">Инвестируйте в соответствии с вашим профилем риска</li>
+                <li>Не забывайте про "подушку безопасности" в виде депозитов</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Таблица инвестиций -->
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 style="color: #333;">
+            <i class="fas fa-list"></i> Список активов
+        </h3>
+        <a href="/add-investment" class="btn btn-primary" style="padding: 8px 16px;">
+            <i class="fas fa-plus"></i> Добавить новый актив
+        </a>
+    </div>
+
+    {% if investments %}
+        <div style="overflow-x: auto;">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Название</th>
+                        <th>Тип</th>
+                        <th>Дата покупки</th>
+                        <th>Стоимость покупки</th>
+                        <th>Текущая стоимость</th>
+                        <th>Прибыль</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inv in investments %}
+                        {% if inv is mapping %}
+                            {% set purchase_date = inv.get("purchase_date", "") %}
+                            {% set display_date = format_date(purchase_date, '%Y-%m-%d', '%d.%m.%Y') %}
+
+                            {% set current_value = inv.get("current_value", inv.get("amount", 0)) %}
+                            {% set purchase_value = inv.get("amount", 0) %}
+                            {% set profit = current_value - purchase_value %}
+                            {% set profit_percent = (profit / purchase_value * 100) if purchase_value > 0 else 0 %}
+                            {% set profit_class = "income" if profit >= 0 else "expense" %}
+                            {% set profit_sign = "+" if profit >= 0 else "" %}
+
+                            <tr>
+                                <td><strong>{{ inv.get("name", "") }}</strong></td>
+                                <td>{{ inv.get("type", "Акции") }}</td>
+                                <td>{{ display_date }}</td>
+                                <td>{{ format_currency(purchase_value) }}</td>
+                                <td>{{ format_currency(current_value) }}</td>
+                                <td class="{{ profit_class }}">{{ profit_sign }}{{ format_currency(profit) }} ({{ "%+.1f"|format(profit_percent) }}%)</td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 40px; color: #666;">
+            <i class="fas fa-chart-line" style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;"></i>
+            <p style="font-size: 18px;">Портфель пуст</p>
+            <p style="margin-top: 10px;">Добавьте первый актив в портфель!</p>
+            <a href="/add-investment" class="btn btn-primary" style="margin-top: 20px;">
+                <i class="fas fa-plus"></i> Добавить первый актив
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

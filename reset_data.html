@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Сброс данных - Финансовый менеджер{% endblock %}
+
+{% block content %}
+<h1 style="color: #333; margin-bottom: 30px;">Сброс данных</h1>
+
+<div class="card" style="background: #fff3e0; border-left: 5px solid #FF9800;">
+    <div style="text-align: center; padding: 20px;">
+        <i class="fas fa-exclamation-triangle" style="font-size: 64px; color: #FF9800; margin-bottom: 20px;"></i>
+        <h3 style="color: #FF9800; margin-bottom: 15px;">Внимание! Это необратимое действие</h3>
+        <p style="color: #666; margin-bottom: 20px;">
+            Вы собираетесь удалить ВСЕ данные приложения. Это действие нельзя отменить.
+            Все транзакции, инвестиции и цели будут безвозвратно удалены.
+        </p>
+    </div>
+</div>
+
+<div style="display: flex; gap: 15px; margin-top: 30px; justify-content: center;">
+    <button onclick="confirmReset()" class="btn btn-danger" style="padding: 12px 24px;">
+        <i class="fas fa-trash"></i> Да, удалить все данные
+    </button>
+    <a href="/" class="btn" style="background: #f0f0f0; padding: 12px 24px;">
+        <i class="fas fa-times"></i> Отмена
+    </a>
+</div>
+
+<div class="card" style="background: #f8f9fa; margin-top: 20px;">
+    <div style="display: flex; gap: 15px; align-items: flex-start;">
+        <i class="fas fa-lightbulb" style="color: #FF9800; font-size: 24px; margin-top: 5px;"></i>
+        <div>
+            <h4 style="color: #666; margin-bottom: 10px;">Рекомендация</h4>
+            <p style="color: #666; margin: 0;">
+                Перед сбросом данных рекомендуется экспортировать их через раздел 
+                <a href="/export" style="color: #2196F3; font-weight: 500;">Экспорт</a> 
+                для сохранения резервной копии.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Что будет удалено -->
+<div class="card" style="margin-top: 20px;">
+    <h3 style="margin-bottom: 15px; color: #f44336;">
+        <i class="fas fa-trash-alt"></i> Что будет удалено:
+    </h3>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+        <div style="text-align: center; padding: 15px; background: #ffebee; border-radius: 8px;">
+            <div style="font-size: 24px; color: #f44336; font-weight: bold;">{{ transactions_count }}</div>
+            <div style="color: #666;">Транзакций</div>
+        </div>
+        
+        <div style="text-align: center; padding: 15px; background: #ffebee; border-radius: 8px;">
+            <div style="font-size: 24px; color: #f44336; font-weight: bold;">{{ investments_count }}</div>
+            <div style="color: #666;">Инвестиций</div>
+        </div>
+        
+        <div style="text-align: center; padding: 15px; background: #ffebee; border-radius: 8px;">
+            <div style="font-size: 24px; color: #f44336; font-weight: bold;">{{ goals_count }}</div>
+            <div style="color: #666;">Целей</div>
+        </div>
+        
+        <div style="text-align: center; padding: 15px; background: #ffebee; border-radius: 8px;">
+            <div style="font-size: 24px; color: #f44336; font-weight: bold;">{{ total_items }}</div>
+            <div style="color: #666;">Всего записей</div>
+        </div>
+    </div>
+    
+    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee;">
+        <h4 style="color: #666; margin-bottom: 10px;">Что сохранится:</h4>
+        <ul style="padding-left: 20px; color: #555;">
+            <li style="margin-bottom: 8px;">Аккаунт пользователя (логин и пароль)</li>
+            <li style="margin-bottom: 8px;">Настройки системы (категории, типы инвестиций)</li>
+            <li style="margin-bottom: 8px;">Профиль риска пользователя</li>
+            <li>Базовая структура данных</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function confirmReset() {
+    const message = "ВНИМАНИЕ!\n\n" +
+                   "Вы уверены, что хотите удалить ВСЕ данные?\n" +
+                   "Это действие НЕЛЬЗЯ отменить!\n\n" +
+                   "• Все транзакции будут удалены\n" +
+                   "• Все инвестиции будут удалены\n" +
+                   "• Все цели будут удалены\n\n" +
+                   "Сначала сделайте резервную копию через Экспорт!\n" +
+                   "Все данные будут удалены безвозвратно";
+    
+    if (confirm(message)) {
+        // Показываем индикатор загрузки
+        const buttons = document.querySelectorAll('button, .btn');
+        buttons.forEach(btn => {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Удаление...';
+        });
+
+        // Выполняем сброс
+        fetch('/api/reset-data', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Данные успешно сброшены! Вы будете перенаправлены на главную страницу.');
+                window.location.href = '/';
+            } else {
+                alert('Ошибка: ' + data.error);
+                window.location.reload();
+            }
+        })
+        .catch(error => {
+            alert('Ошибка при сбросе данных');
+            window.location.reload();
+        });
+    }
+}
+</script>
+{% endblock %}

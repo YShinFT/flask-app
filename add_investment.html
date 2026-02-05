@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Добавить инвестицию - Финансовый менеджер{% endblock %}
+
+{% block content %}
+<h1 style="color: #333; margin-bottom: 20px;">Добавить актив в портфель</h1>
+
+<div class="card">
+    <form action="/api/add-investment" method="POST">
+        <div class="form-group">
+            <label for="name">Название актива</label>
+            <input type="text" id="name" name="name" required
+                   placeholder="Например: Акции Газпром, Облигации РФ, Депозит в Сбербанке"
+                   style="width: 100%; padding: 12px;">
+        </div>
+
+        <div class="form-group">
+            <label for="type">Тип актива</label>
+            <select id="type" name="type" required style="width: 100%; padding: 12px;">
+                <option value="">Выберите тип актива</option>
+                {% for inv_type in investment_types %}
+                    <option value="{{ inv_type }}">{{ inv_type }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="form-group">
+                <label for="amount">Сумма инвестиции (₽)</label>
+                <input type="number" id="amount" name="amount" step="0.01" min="0.01" required
+                       placeholder="10000" style="width: 100%; padding: 12px;">
+            </div>
+
+            <div class="form-group">
+                <label for="current_value">Текущая стоимость (₽)</label>
+                <input type="number" id="current_value" name="current_value" step="0.01" min="0.01"
+                       placeholder="Оставьте пустым, если равна сумме инвестиции"
+                       style="width: 100%; padding: 12px;">
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="form-group">
+                <label for="purchase_date">Дата покупки</label>
+                <input type="date" id="purchase_date" name="purchase_date"
+                       value="{{ today }}"
+                       required style="width: 100%; padding: 12px;">
+            </div>
+
+            <div class="form-group">
+                <label for="expected_return">Ожидаемая доходность (% годовых)</label>
+                <input type="number" id="expected_return" name="expected_return" step="0.1"
+                       placeholder="Например: 10" style="width: 100%; padding: 12px;">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="notes">Примечания (необязательно)</label>
+            <textarea id="notes" name="notes" rows="3"
+                      placeholder="Дополнительная информация: тикер, эмитент, условия и т.д."
+                      style="width: 100%; padding: 12px; resize: vertical;"></textarea>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 30px;">
+            <button type="submit" class="btn btn-primary" style="padding: 12px 24px;">
+                <i class="fas fa-save"></i> Добавить актив
+            </button>
+            <a href="/investments" class="btn" style="background: #f0f0f0; padding: 12px 24px;">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

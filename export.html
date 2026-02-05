@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Экспорт данных - Финансовый менеджер{% endblock %}
+
+{% block content %}
+<h1 style="color: #333; margin-bottom: 30px;">Экспорт данных</h1>
+
+<div class="card">
+    <h3 style="margin-bottom: 20px;">Экспорт в различные форматы</h3>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 30px 0;">
+        <div style="text-align: center; padding: 25px; background: #e8f5e9; border-radius: 10px;">
+            <i class="fas fa-file-csv" style="font-size: 48px; color: #4CAF50; margin-bottom: 15px;"></i>
+            <h4>CSV формат</h4>
+            <p style="color: #666; margin: 10px 0;">Для Excel и таблиц</p>
+            <a href="/api/export/csv" class="btn btn-primary" style="padding: 10px 20px;">
+                <i class="fas fa-download"></i> Скачать CSV
+            </a>
+        </div>
+
+        <div style="text-align: center; padding: 25px; background: #fff3e0; border-radius: 10px;">
+            <i class="fas fa-file-alt" style="font-size: 48px; color: #FF9800; margin-bottom: 15px;"></i>
+            <h4>JSON формат</h4>
+            <p style="color: #666; margin: 10px 0;">Для резервного копирования</p>
+            <a href="/api/export/json" class="btn btn-primary" style="padding: 10px 20px;">
+                <i class="fas fa-download"></i> Скачать JSON
+            </a>
+        </div>
+
+        <div style="text-align: center; padding: 25px; background: #e3f2fd; border-radius: 10px;">
+            <i class="fas fa-print" style="font-size: 48px; color: #2196F3; margin-bottom: 15px;"></i>
+            <h4>Печатная версия</h4>
+            <p style="color: #666; margin: 10px 0;">Для распечатки отчета</p>
+            <button onclick="window.print()" class="btn btn-primary" style="padding: 10px 20px;">
+                <i class="fas fa-print"></i> Печать отчета
+            </button>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top: 30px; background: #fffde7; padding: 20px;">
+        <h4 style="color: #FF9800; margin-bottom: 15px;">
+            <i class="fas fa-exclamation-triangle"></i> Важная информация
+        </h4>
+        <ul style="padding-left: 20px; color: #666;">
+            <li style="margin-bottom: 10px;">Данные экспортируются в текущем состоянии</li>
+            <li style="margin-bottom: 10px;">Рекомендуется регулярно делать резервные копии</li>
+            <li style="margin-bottom: 10px;">Экспортированные файлы содержат все транзакции</li>
+            <li style="margin-bottom: 10px;">Ваши данные хранятся локально</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Статистика для экспорта -->
+<div class="card" style="margin-top: 20px;">
+    <h3 style="margin-bottom: 15px;">Что будет экспортировано:</h3>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+        <div style="text-align: center;">
+            <div style="font-size: 24px; color: #2196F3; font-weight: bold;">{{ transactions_count }}</div>
+            <div style="color: #666;">Транзакций</div>
+        </div>
+        
+        <div style="text-align: center;">
+            <div style="font-size: 24px; color: #4CAF50; font-weight: bold;">{{ investments_count }}</div>
+            <div style="color: #666;">Инвестиций</div>
+        </div>
+        
+        <div style="text-align: center;">
+            <div style="font-size: 24px; color: #FF9800; font-weight: bold;">{{ goals_count }}</div>
+            <div style="color: #666;">Целей</div>
+        </div>
+        
+        <div style="text-align: center;">
+            <div style="font-size: 24px; color: #9C27B0; font-weight: bold;">{{ total_size|filesizeformat }}</div>
+            <div style="color: #666;">Примерный размер</div>
+        </div>
+    </div>
+</div>
+
+<!-- Инструкция по импорту -->
+<div class="card" style="margin-top: 20px; background: #f5f5f5;">
+    <h3 style="margin-bottom: 15px;">
+        <i class="fas fa-info-circle"></i> Инструкция по использованию
+    </h3>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div>
+            <h4 style="color: #4CAF50; margin-bottom: 10px;">CSV файл:</h4>
+            <ul style="padding-left: 20px; color: #555;">
+                <li>Открывается в Excel, Google Sheets</li>
+                <li>Поддерживает русские символы</li>
+                <li>Разделитель - точка с запятой</li>
+                <li>Кодировка UTF-8</li>
+            </ul>
+        </div>
+        
+        <div>
+            <h4 style="color: #FF9800; margin-bottom: 10px;">JSON файл:</h4>
+            <ul style="padding-left: 20px; color: #555;">
+                <li>Полная резервная копия данных</li>
+                <li>Можно открыть в текстовом редакторе</li>
+                <li>Содержит всю структуру данных</li>
+                <li>Идеален для восстановления</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Страница экспорта загружена');
+    
+    // Можно добавить отслеживание кликов по кнопкам экспорта
+    document.querySelectorAll('a[href*="/api/export/"]').forEach(link => {
+        link.addEventListener('click', function(e) {
+            console.log('Начато скачивание: ' + this.href);
+            // Можно добавить индикатор загрузки
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Подготовка...';
+        });
+    });
+});
+</script>
+{% endblock %}

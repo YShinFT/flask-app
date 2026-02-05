@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}Финансовые цели - Финансовый менеджер{% endblock %}
+
+{% block content %}
+<div class="card-header">
+    <h1 class="card-title" style="font-size: 28px;">Финансовые цели</h1>
+    <div>
+        <a href="/add-goal" class="btn btn-primary" style="padding: 10px 20px;">
+            <i class="fas fa-plus"></i> Новая цель
+        </a>
+    </div>
+</div>
+
+<!-- Общая статистика целей -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 30px 0;">
+    <div style="background: white; border-radius: 10px; padding: 25px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-top: 5px solid #4CAF50;">
+        <div style="color: #666; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Всего целей</div>
+        <div style="font-size: 36px; font-weight: bold; margin: 10px 0; color: #4CAF50;">{{ goals|length }}</div>
+        <p>Количество активных целей</p>
+    </div>
+
+    <div style="background: white; border-radius: 10px; padding: 25px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-top: 5px solid #2196F3;">
+        <div style="color: #666; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Общая цель</div>
+        <div style="font-size: 36px; font-weight: bold; margin: 10px 0; color: #2196F3;">
+            {{ format_currency(total_target) }}
+        </div>
+        <p>Сумма всех целей</p>
+    </div>
+
+    <div style="background: white; border-radius: 10px; padding: 25px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-top: 5px solid #FF9800;">
+        <div style="color: #666; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Уже накоплено</div>
+        <div style="font-size: 36px; font-weight: bold; margin: 10px 0; color: #FF9800;">
+            {{ format_currency(total_saved) }}
+        </div>
+        <p>Сумма всех накоплений</p>
+    </div>
+</div>
+
+<!-- Список целей -->
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 style="color: #333;">
+            <i class="fas fa-bullseye"></i> Мои цели
+        </h3>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="filterGoals('all')" class="btn" style="background: #f0f0f0; padding: 8px 16px;">Все</button>
+            <button onclick="filterGoals('active')" class="btn" style="background: #e3f2fd; color: #2196F3; padding: 8px 16px;">Активные</button>
+            <button onclick="filterGoals('completed')" class="btn" style="background: #e8f5e9; color: #4CAF50; padding: 8px 16px;">Завершенные</button>
+        </div>
+    </div>
+
+    {% if goals_sorted %}
+        {% for goal in goals_sorted %}
+            {% if goal is mapping %}
+                {% set progress = calculate_goal_progress(goal) %}
+                {% set status = get_goal_status(goal) %}
+                {% set saved = goal.get("saved", 0) %}
+                {% set target = goal.get("target", 1) %}
+
+                {% if status == "completed" %}
+                    {% set status_color = "#4CAF50" %}
+                    {% set status_text = "Достигнута" %}
+                {% elif status == "overdue" %}
+                    {% set status_color = "#f44336" %}
+                    {% set status_text = "Просрочена" %}
+                {% elif status == "urgent" %}
+                    {% set status_color = "#FF9800" %}
+                    {% set status_text = "Срочная" %}
+                {% elif status == "good_progress" %}
+                    {% set status_color = "#2196F3" %}
+                    {% set status_text = "Хороший прогресс" %}
+                {% elif status == "active" %}
+                    {% set status_color = "#2196F3" %}
+                    {% set status_text = "Активная" %}
+                {% else %}
+                    {% set status_color = "#9E9E9E" %}
+                    {% set status_text = "Неизвестно" %}
+                {% endif %}
+
+                <!-- Форматируем дату дедлайна -->
+                {% set deadline_str = goal.get("deadline", "") %}
+                {% set days_text = "" %}
+
+                {% set deadline_str = goal.get("deadline", "") %}
+                {% set display_deadline = deadline_str %}
+                {% set days_text = "" %}
+
+                {% if deadline_str %}
+                    <i class="fas fa-calendar-alt"></i> До {{ deadline_str }}
+                {% endif %}
+
+                <div class="goal-card" style="background: white; border-radius: 10px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-left: 5px solid {{ status_color }};">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                        <div>
+                            <h3 style="margin: 0 0 5px 0; color: #333; font-size: 18px;">
+                                {{ status_icon }} {{ goal.get('name', 'Без названия') }}
+                            </h3>
+                            <p style="margin: 0; color: #666; font-size: 14px;">
+                                {{ goal.get('description', '') }}
+                            </p>
+                        </div>
+                        <span style="background: {{ status_color }}15; color: {{ status_color }}; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500;">
+                            {{ status_text }}
+                        </span>
+                    </div>
+
+                    <!-- Прогресс-бар -->
+                    <div style="margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span style="color: #666; font-size: 14px;">Прогресс: {{ "%.1f"|format(progress) }}%</span>
+                            <span style="color: #666; font-size: 14px;">{{ format_currency(saved) }} / {{ format_currency(target) }}</span>
+                        </div>
+                        <div style="height: 10px; background: #f0f0f0; border-radius: 5px; overflow: hidden;">
+                            <div style="width: {{ progress }}%; height: 100%; background: {{ status_color }}; border-radius: 5px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Детали цели -->
+                    <div style="display: flex; justify-content: space-between; font-size: 13px; color: #666;">
+                        <div>
+                            {% if display_deadline %}
+                                <i class="fas fa-calendar-alt"></i> До {{ display_deadline }}
+                                {% if days_text %}
+                                    <br><span style="font-size: 11px; color: {{ status_color }};">{{ days_text }}</span>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        <div>
+                            Осталось: <strong style="color: {{ status_color }};">{{ format_currency(target - saved) }}</strong>
+                        </div>
+                    </div>
+
+                    <!-- Кнопки управления -->
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button onclick="addToGoal({{ goal.get('id', 0) }})" class="btn" style="background: #4CAF50; color: white; padding: 8px 16px; font-size: 12px;">
+                            <i class="fas fa-plus"></i> Добавить средства
+                        </button>
+                        <button onclick="editGoal({{ goal.get('id', 0) }})" class="btn" style="background: #2196F3; color: white; padding: 8px 16px; font-size: 12px;">
+                            <i class="fas fa-edit"></i> Редактировать
+                        </button>
+                        <button onclick="deleteGoal({{ goal.get('id', 0) }})" class="btn" style="background: #f0f0f0; color: #666; padding: 8px 16px; font-size: 12px;">
+                            <i class="fas fa-trash"></i> Удалить
+                        </button>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% else %}
+        <div style="text-align: center; padding: 50px; color: #666;">
+            <div style="font-size: 64px; margin-bottom: 20px;">🎯</div>
+            <p style="font-size: 18px; margin-bottom: 10px;">У вас пока нет финансовых целей</p>
+            <p style="margin-bottom: 20px;">Создайте свою первую цель, чтобы начать копить на мечту!</p>
+            <a href="/add-goal" class="btn btn-primary" style="padding: 10px 20px;">
+                <i class="fas fa-plus"></i> Создать первую цель
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function addToGoal(goalId) {
+    const amount = prompt("Сколько средств добавить к цели? (₽)", "1000");
+    if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
+        fetch(`/api/goals/${goalId}/add`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `amount=${amount}`
+        }).then(response => {
+            if (response.ok) {
+                window.location.reload();
+            } else {
+                alert('Ошибка при добавлении средств');
+            }
+        });
+    }
+}
+
+function editGoal(goalId) {
+    window.location.href = `/edit-goal?id=${goalId}`;
+}
+
+function deleteGoal(goalId) {
+    if (confirm('Вы уверены, что хотите удалить эту цель?')) {
+        fetch(`/api/goals/${goalId}/delete`, {
+            method: 'DELETE'
+        }).then(response => {
+            if (response.ok) {
+                window.location.reload();
+            } else {
+                alert('Ошибка при удалении цели');
+            }
+        });
+    }
+}
+
+function filterGoals(filter) {
+    // Простая фильтрация - можно переписать на более сложную
+    const cards = document.querySelectorAll('.goal-card');
+    cards.forEach(card => {
+        const statusText = card.querySelector('span').textContent.toLowerCase();
+
+        if (filter === 'all') {
+            card.style.display = 'block';
+        } else if (filter === 'completed' && statusText.includes('достигнута')) {
+            card.style.display = 'block';
+        } else if (filter === 'active' && !statusText.includes('достигнута')) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+</script>
+{% endblock %}

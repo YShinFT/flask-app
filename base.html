@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>{% block title %}Финансовый менеджер{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style1.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Навигационная панель -->
+        <nav class="navbar">
+            <a href="/" class="logo">
+                <span class="logo-icon">💰</span>
+                <span class="logo-text">ФинансМенеджер</span>
+            </a>
+
+            {% if current_user %}
+                <div class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+                    <i class="fas fa-bars"></i>
+                </div>
+            {% endif %}
+
+            <div class="nav-header">
+                {% if current_user %}
+                    <div class="user-info">
+                        <i class="fas fa-user-circle"></i>
+                        <div class="user-details">
+                            <div class="username">{{ current_user['username'] }}</div>
+                            <div class="user-role">Пользователь</div>
+                        </div>
+                    </div>
+                {% endif %}
+                {% if not current_title %}
+                    {% set current_title = 'Главная' %}
+                {% endif %}
+                <div class="nav-links" id="navLinks">
+                    {% if current_user %}
+                        {% include 'partials/nav_links.html' %}
+                        <a href="/logout" class="nav-link logout-link">
+                            <i class="fas fa-sign-out-alt"></i> <span class="nav-text">Выйти</span>
+                        </a>
+                    {% else %}
+                        <div class="nav-links-mobile">
+                            <a href="/login" class="nav-link">
+                                <i class="fas fa-sign-in-alt"></i> Войти
+                            </a>
+                            <a href="/register" class="nav-link">
+                                <i class="fas fa-user-plus"></i> Регистрация
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </nav>
+
+        <div class="menu-overlay" id="menuOverlay" onclick="toggleMobileMenu()"></div>
+
+        <!-- Основной контент -->
+        <div class="content">
+            {% block content %}{% endblock %}
+        </div>
+
+        <!-- Футер -->
+        <div class="footer">
+            <p>Финансовый менеджер | Яшин Владислав | {{ current_year }}</p>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+    function toggleMobileMenu() {
+        const navLinks = document.getElementById('navLinks');
+        const overlay = document.getElementById('menuOverlay');
+        navLinks.classList.toggle('active');
+        overlay.classList.toggle('active');
+        document.body.style.overflow = navLinks.classList.contains('active') ? 'hidden' : '';
+    }
+
+    // Закрытие меню при клике на ссылку
+    document.addEventListener('DOMContentLoaded', function() {
+        const navLinks = document.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                toggleMobileMenu();
+            });
+        });
+
+        // Адаптивные изображения
+        const images = document.querySelectorAll('img');
+        images.forEach(img => {
+            img.style.maxWidth = '100%';
+            img.style.height = 'auto';
+        });
+    });
+
+    // Предотвращение масштабирования на мобильных устройствах
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(event) {
+        const now = (new Date()).getTime();
+        if (now - lastTouchEnd <= 300) {
+            event.preventDefault();
+        }
+        lastTouchEnd = now;
+    }, false);
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

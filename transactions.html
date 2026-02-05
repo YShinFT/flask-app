@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Транзакции - Финансовый менеджер{% endblock %}
+
+{% block content %}
+<div class="card-header">
+    <h1 class="card-title" style="font-size: 28px;">История транзакций</h1>
+    <div>
+        <a href="/add-transaction?type=income" class="btn btn-primary" style="padding: 10px 20px;">
+            <i class="fas fa-plus"></i> Добавить доход
+        </a>
+        <a href="/add-transaction?type=expense" class="btn btn-danger" style="padding: 10px 20px; margin-left: 10px;">
+            <i class="fas fa-minus"></i> Добавить расход
+        </a>
+    </div>
+</div>
+
+<div style="display: flex; gap: 20px; margin: 20px 0; flex-wrap: wrap;">
+    <div class="btn" style="background: #f0f0f0; padding: 8px 16px;">
+        Все: {{ transactions|length }}
+    </div>
+    <div class="btn" style="background: #e8f5e9; color: #4CAF50; padding: 8px 16px;">
+        Доходы: {{ transactions|selectattr('type', 'equalto', 'income')|list|length }}
+    </div>
+    <div class="btn" style="background: #ffebee; color: #f44336; padding: 8px 16px;">
+        Расходы: {{ transactions|selectattr('type', 'equalto', 'expense')|list|length }}
+    </div>
+</div>
+
+{# Проверяем, есть ли функция #}
+{% if get_transactions_table %}
+    {{ get_transactions_table(transactions_sorted)|safe }}
+{% else %}
+    <div style="text-align: center; padding: 50px; color: #666;">
+        <i class="fas fa-exchange-alt" style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;"></i>
+        <p style="font-size: 18px;">Функция отображения таблицы не загружена</p>
+        <p style="margin-top: 10px;">Попробуйте обновить страницу или проверьте консоль</p>
+    </div>
+{% endif %}
+{% endblock %}

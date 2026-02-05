@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}Аналитика инвестиций - Финансовый менеджер{% endblock %}
+
+{% block content %}
+<div class="card-header">
+    <h1 class="card-title" style="font-size: 28px;">Аналитика инвестиций</h1>
+    <div>
+        <a href="/investments" class="btn btn-secondary" style="padding: 10px 20px;">
+            <i class="fas fa-arrow-left"></i> Назад к портфелю
+        </a>
+    </div>
+</div>
+
+<!-- Общая статистика -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 30px 0;">
+    <div style="background: white; border-radius: 10px; padding: 25px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-top: 5px solid #2196F3;">
+        <div style="color: #666; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Общая прибыль</div>
+        <div style="font-size: 36px; font-weight: bold; margin: 10px 0; color: {{ '#4CAF50' if total_profit >= 0 else '#f44336' }}">
+            {{ '+' if total_profit >= 0 }}{{ format_currency(total_profit) }}
+        </div>
+        <p style="color: {{ '#4CAF50' if total_profit_percent >= 0 else '#f44336' }}; font-weight: bold;">
+            ({{ '%+.1f'|format(total_profit_percent) }}%)
+        </p>
+    </div>
+
+    <div style="background: white; border-radius: 10px; padding: 25px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-top: 5px solid #4CAF50;">
+        <div style="color: #666; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Инвестировано</div>
+        <div style="font-size: 36px; font-weight: bold; margin: 10px 0; color: #4CAF50;">{{ format_currency(total_invested) }}</div>
+        <p>Общая сумма вложений</p>
+    </div>
+
+    <div style="background: white; border-radius: 10px; padding: 25px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-top: 5px solid #FF9800;">
+        <div style="color: #666; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Рентабельность</div>
+        <div style="font-size: 36px; font-weight: bold; margin: 10px 0; color: #FF9800;">
+            {{ '%+.1f'|format(((total_value / total_invested * 100) - 100) if total_invested > 0 else 0.0) }}%
+        </div>
+        <p>Доходность портфеля</p>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin: 30px 0;">
+    <!-- Левая колонка: Примеры диверсификации -->
+    <div class="card">
+        <h3 style="margin-bottom: 20px; color: #333;">
+            <i class="fas fa-balance-scale"></i> Примеры диверсификации
+        </h3>
+        <p style="color: #666; margin-bottom: 20px;">
+            Выберите стратегию в зависимости от вашей готовности к риску:
+        </p>
+
+        {% set diversification_examples = [
+            {'name': 'Консервативный', 'description': 'Минимальный риск', 'allocation': '20% акции, 60% облигации, 20% депозиты', 'color': '#4CAF50'},
+            {'name': 'Умеренный', 'description': 'Баланс риска и доходности', 'allocation': '50% акции, 40% облигации, 10% депозиты', 'color': '#2196F3'},
+            {'name': 'Агрессивный', 'description': 'Максимальная доходность', 'allocation': '80% акции, 15% облигации, 5% депозиты', 'color': '#FF9800'}
+        ] %}
+
+        {% for example in diversification_examples %}
+        <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid {{ example.color }};">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong style="color: {{ example.color }};">{{ example.name }}</strong>
+                    <p style="margin: 5px 0; color: #666; font-size: 14px;">{{ example.description }}</p>
+                </div>
+                <span style="font-weight: bold;">{{ example.allocation }}</span>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #eee;">
+            <h4 style="color: #666; margin-bottom: 10px;">Советы:</h4>
+            <ul style="padding-left: 20px; color: #555;">
+                <li style="margin-bottom: 8px;">Определите свой профиль риска</li>
+                <li style="margin-bottom: 8px;">Следуйте выбранной стратегии распределения</li>
+                <li style="margin-bottom: 8px;">Регулярно проводите ребалансировку</li>
+                <li>Инвестируйте на долгий срок для снижения рисков</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Правая колонка: Подробное распределение -->
+    <div class="card">
+        <h3 style="margin-bottom: 20px; color: #333;">
+            <i class="fas fa-chart-bar"></i> Детальное распределение
+        </h3>
+
+        {% if allocation %}
+            <div style="max-height: 300px; overflow-y: auto; padding-right: 10px;">
+                {% for inv_type, stats in allocation.items()|sort(attribute='1.percentage', reverse=True) %}
+                    {% set percentage = stats.percentage %}
+                    {% set value = stats.value %}
+
+                    {% set colors = {
+                        "Акции": "#4CAF50",
+                        "Облигации": "#2196F3",
+                        "Депозиты": "#FF9800",
+                        "Недвижимость": "#9C27B0",
+                        "ETF": "#00BCD4",
+                        "Криптовалюта": "#FF5722"
+                    } %}
+                    {% set color = colors.get(inv_type, "#795548") %}
+
+                    <div style="margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 12px; height: 12px; border-radius: 50%; background: {{ color }};"></div>
+                                <span style="font-weight: 500;">{{ inv_type }}</span>
+                            </div>
+                            <span><strong>{{ "%.1f"|format(percentage) }}%</strong></span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span style="font-size: 12px; color: #666;">{{ format_currency(value) }}</span>
+                            <span style="font-size: 12px; color: #666;">{{ "%.1f"|format((value / total_value * 100) if total_value > 0 else 0) }}% от портфеля</span>
+                        </div>
+                        <div style="height: 8px; background: #f0f0f0; border-radius: 4px; overflow: hidden;">
+                            <div style="width: {{ percentage }}%; height: 100%; background: {{ color }}; border-radius: 4px;"></div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p style="text-align: center; color: #666;">Нет данных для отображения</p>
+        {% endif %}
+
+        <div style="margin-top: 25px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+            <h4 style="color: #666; margin-bottom: 10px;">Анализ диверсификации:</h4>
+            <p style="color: #555; margin: 0;">
+                {% set num_types = allocation|length %}
+                {% if total_value == 0 %}
+                    Начните инвестировать, чтобы получить анализ диверсификации.
+                {% elif num_types == 0 %}
+                    Портфель пуст. Добавьте активы для создания диверсифицированного портфеля.
+                {% elif num_types == 1 %}
+                    Низкая диверсификация. Вы подвержены высокому риску. Добавьте активы других типов.
+                {% elif num_types == 2 %}
+                    Средняя диверсификация. Хорошо, но можно лучше. Рассмотрите возможность добавления еще одного типа активов.
+                {% elif num_types >= 3 %}
+                    Высокая диверсификация. Отличная работа! Ваш портфель хорошо защищен от рисков.
+                {% else %}
+                    Проведите анализ вашего портфеля для оптимизации распределения активов.
+                {% endif %}
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Дополнительная статистика по типам активов -->
+<div class="card">
+    <h3 style="margin-bottom: 20px; color: #333;">
+        <i class="fas fa-chart-pie"></i> Статистика по типам активов
+    </h3>
+
+    {% if investment_summary.by_type %}
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+            {% for inv_type, type_data in investment_summary.by_type.items() %}
+                {% set profit_color = "#4CAF50" if type_data.profit >= 0 else "#f44336" %}
+                {% set profit_sign = "+" if type_data.profit >= 0 else "" %}
+
+                <div style="background: white; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h4 style="margin: 0; color: #333;">{{ inv_type }}</h4>
+                        <span style="background: #f0f0f0; padding: 3px 8px; border-radius: 12px; font-size: 12px;">
+                            {{ type_data.count }} актив{{ 'а' if type_data.count % 10 in [2,3,4] and type_data.count % 100 not in [12,13,14] else 'ов' }}
+                        </span>
+                    </div>
+
+                    <div style="margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span style="font-size: 14px; color: #666;">Стоимость:</span>
+                            <span style="font-weight: bold;">{{ format_currency(type_data.value) }}</span>
+                        </div>
+                        <div style="height: 6px; background: #f0f0f0; border-radius: 3px; overflow: hidden;">
+                            <div style="width: {{ (type_data.value / total_value * 100) if total_value > 0 else 0 }}%; height: 100%; background: #2196F3; border-radius: 3px;"></div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                        <span style="color: #666;">Прибыль:</span>
+                        <span style="font-weight: bold; color: {{ profit_color }};">
+                            {{ profit_sign }}{{ format_currency(type_data.profit) }}
+                        </span>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p style="text-align: center; color: #666; padding: 30px;">Нет инвестиционных активов</p>
+    {% endif %}
+
+    <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #eee;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h4 style="color: #666; margin-bottom: 5px;">Итоговая статистика</h4>
+                <p style="color: #888; margin: 0; font-size: 14px;">Общие показатели портфеля</p>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 18px; font-weight: bold;">
+                    {{ format_currency(investment_summary.total_value) }}
+                </div>
+                <div style="font-size: 14px; color: {{ '#4CAF50' if investment_summary.total_profit >= 0 else '#f44336' }};">
+                    {{ '+' if investment_summary.total_profit >= 0 }}{{ format_currency(investment_summary.total_profit) }}
+                    ({{ '%+.1f'|format(investment_summary.profit_percentage) }}%)
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
